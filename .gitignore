@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv*/
+.capture-tools/
+node_modules/
+.env
+.env.*
+runtime*.json
+*.log
+qa-output/
+share/production/
+tmp/
+output/
+.DS_Store
+Thumbs.db

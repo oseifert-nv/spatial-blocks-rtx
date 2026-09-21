@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:,">
+  <title>Spatial Blocks</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><div class="eyebrow">A SMALL SPATIAL EXPERIMENT</div><h1>Spatial Blocks<span>.</span></h1></div></div>
+      <div class="live-badge"><span id="connection-dot"></span><span id="connection">Connecting</span></div>
+    </header>
+    <div class="game-layout">
+      <section class="play-column" aria-label="Game board">
+        <div class="board-heading"><span>MAKE ROOM FOR WHAT’S NEXT.</span><span id="phase-label">READY</span></div>
+        <div class="board-wrap">
+          <canvas id="board" width="400" height="800" tabindex="0" aria-label="Ten-column, twenty-row falling-block board. Arrow keys move and rotate; Space drops."></canvas>
+          <div id="overlay" class="overlay">
+            <div class="overlay-content"><div class="eyebrow" id="overlay-tag">STACK. ROTATE. CLEAR.</div><h2 id="overlay-title">A little space.<br>A lot of possibilities.</h2><p id="overlay-copy">Fit the falling pieces. Complete a row to make it disappear.</p><button id="play" class="primary">Let’s play <span>↗</span></button><span id="overlay-hint">or press Enter</span></div>
+          </div>
+        </div>
+        <div class="board-footer"><span class="ghost-key"></span>Outline = landing preview <span class="footer-right">10 × 20</span></div>
+      </section>
+      <aside class="sidebar">
+        <section class="score-panel"><div class="eyebrow">SCORE</div><div id="score" class="score">000000</div><div class="score-details"><div><span>LINES</span><strong id="lines">0</strong></div><div><span>LEVEL</span><strong id="level">01</strong></div><div><span>PIECES</span><strong id="pieces">0</strong></div></div></section>
+        <section class="next-panel"><div class="section-label">UP NEXT <span>03</span></div><canvas id="next" width="280" height="105" aria-label="Next three pieces"></canvas></section>
+        <section class="controls-panel"><div class="section-label">FIND YOUR FLOW</div><div class="control-row"><span>Move</span><div><kbd>←</kbd><kbd>→</kbd></div></div><div class="control-row"><span>Rotate</span><div><kbd>↑</kbd><kbd>Z</kbd></div></div><div class="control-row"><span>Soft drop</span><kbd>↓</kbd></div><div class="control-row"><span>Hard drop</span><kbd class="wide-key">SPACE</kbd></div><div class="control-row"><span>Pause</span><kbd>P</kbd></div><div class="action-buttons"><button id="pause">Pause</button><button id="restart">New game</button></div></section>
+        <section class="engine-panel"><div class="section-label">UNDER THE SURFACE <span class="engine-dot"></span></div><h3>Real geometry. Every move.</h3><p>Each candidate block asks the spatial library: “Is this space occupied?”</p><div class="engine-row"><span>Query engine</span><strong>ovspatialquery</strong></div><div class="engine-row"><span>Scene version</span><strong id="ordinal">—</strong></div><div class="engine-row"><span>Settled boxes</span><strong id="objects">0</strong></div><div class="engine-row"><span>Overlap checks</span><strong id="queries">0</strong></div><div class="engine-row"><span>Last check</span><strong id="query-time">—</strong></div><div class="engine-result"><span id="result-dot"></span><span id="move-result">Ready</span><span>EXACT · CPU</span></div></section>
+        <div id="message" class="message" aria-live="polite">Find your rhythm.</div>
+      </aside>
+    </div>
+    <div class="touch-controls" aria-label="Touch controls"><button data-action="left" aria-label="Move left">←</button><button data-action="rotate" aria-label="Rotate">↻</button><button data-action="right" aria-label="Move right">→</button><button data-action="down" aria-label="Soft drop">↓</button><button data-action="drop">DROP</button></div>
+    <footer class="page-footer"><span>Built to play. Made to explore.</span><button id="exit">Close game</button></footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,66 @@
+// Run against app3d.py --seed 7 --test-scenario, using real ovrtx and ovspatialquery.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const crypto=require('node:crypto');
+(async()=>{
+  const {url}=JSON.parse(fs.readFileSync(path.join(__dirname,'runtime3d.json'),'utf8'));
+  const out=path.join(__dirname,'qa-output');fs.mkdirSync(out,{recursive:true});
+  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH});
+  const page=await browser.newPage({viewport:{width:1440,height:960},deviceScaleFactor:1});
+  const errors=[],external=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  page.on('request',r=>{if(!r.url().startsWith(url)&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:'))external.push(r.url());});
+  const state=async()=>(await page.request.get(url+'/api/state')).json();
+  const perform=async(action,trigger)=>{
+    const waiting=page.waitForResponse(r=>r.url().endsWith('/api/action')&&r.request().postDataJSON()?.action===action);
+    await trigger();const response=await waiting;assert.equal(response.status(),200);return response.json();
+  };
+  const key=(action,code)=>perform(action,()=>page.keyboard.press(code));
+  try{
+    await page.goto(url);
+    await page.waitForFunction(()=>document.getElementById('play').disabled===false,{},{timeout:120000});
+    await page.waitForFunction(()=>document.getElementById('scene').naturalWidth===1000);
+    const initial=await state();
+    assert.equal(initial.engine.engine,'ovspatialquery');assert.equal(initial.renderer.engine,'ovrtx');
+    assert.equal(initial.renderer.mode,'RealTimePathTracing');assert.equal(initial.board.length,36);
+    const first=await page.request.get(url+'/frame.jpg');const firstPixels=await first.body();
+    assert(firstPixels.length>10000);assert.equal(firstPixels[0],255);assert.equal(firstPixels[1],216);
+    await page.screenshot({path:path.join(out,'3d-ready.png'),fullPage:true});
+    await perform('start',()=>page.locator('#play').click());
+    await page.waitForFunction(()=>document.getElementById('overlay').hidden);
+    await page.screenshot({path:path.join(out,'3d-playing.png'),fullPage:true});
+    const cleared=await key('drop','Space');
+    assert.equal(cleared.lines,4);assert.equal(cleared.board.length,0);assert.equal(cleared.pieces,1);
+    assert(cleared.score>=800);assert.equal(cleared.renderer.effects,1);assert(cleared.renderer.particles>0);
+    assert(cleared.engine.ordinal>initial.engine.ordinal);
+    await page.screenshot({path:path.join(out,'3d-clear-effects.png'),fullPage:true});
+    const secondPixels=await (await page.request.get(url+'/frame.jpg')).body();
+    assert.notEqual(crypto.createHash('sha256').update(firstPixels).digest('hex'),crypto.createHash('sha256').update(secondPixels).digest('hex'));
+    const rotation=(await state()).active.rotation;
+    const rotated=await key('rotate','ArrowUp');assert.equal(rotated.active.rotation,(rotation+1)%4);
+    const x=rotated.active.cells[0][0];const moved=await key('left','ArrowLeft');assert.equal(moved.active.cells[0][0],x-1);
+    const paused=await key('pause','KeyP');assert.equal(paused.phase,'paused');
+    await page.waitForTimeout(1000);assert.deepEqual((await state()).active,paused.active);
+    const front=await perform('front',()=>page.locator('#front').click());assert.equal(front.renderer.camera[0],0);
+    const angle=await perform('angle',()=>page.locator('#angle').click());assert(angle.renderer.camera[0]>0);
+    const rect=await page.locator('#scene').boundingBox();
+    await page.mouse.move(rect.x+rect.width*.3,rect.y+rect.height*.5);await page.mouse.down();
+    await page.mouse.move(rect.x+rect.width*.3+60,rect.y+rect.height*.5+15,{steps:5});await page.mouse.up();
+    await page.waitForTimeout(500);assert(Math.abs((await state()).renderer.camera[0]-(angle.renderer.camera[0]+.3))<.03);
+    await page.screenshot({path:path.join(out,'3d-orbit.png'),fullPage:true});
+    await perform('restart',()=>page.locator('#restart').click());assert.equal((await state()).board.length,0);
+    await page.setViewportSize({width:390,height:844});
+    const mobile=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
+    assert(mobile.scroll<=mobile.width+1,JSON.stringify(mobile));
+    await perform('drop',()=>page.locator('[data-action="drop"]').click());
+    assert.equal((await state()).pieces,1);
+    await perform('pause',()=>page.locator('#pause').click());
+    await page.screenshot({path:path.join(out,'3d-mobile.png'),fullPage:true});
+    const rejected=await page.request.post(url+'/api/action',{headers:{Origin:'https://example.com'},data:{action:'restart'}});
+    assert.equal(rejected.status(),403);
+    assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+    const final=await state();
+    console.log(JSON.stringify({passed:true,checks:['actual RTX JPEG stream','native spatial placement','four-line clearance','particles and beams','rotation','movement','pause','camera views','orbit','restart','touch','responsive layout','origin restriction'],render:final.renderer,queries:final.engine.queries},null,2));
+  }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

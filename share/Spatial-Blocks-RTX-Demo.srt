@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:04,400
+ovspatialquery tests candidate placements.
+Exact box-overlap queries power movement, rotation and the landing guide.
+
+2
+00:00:04,400 --> 00:00:07,000
+Game rules remove completed rows.
+ovstage publishes versioned scene updates for the renderer.
+
+3
+00:00:07,000 --> 00:00:10,800
+ovrtx renders the result on the GPU.
+RTX shading, reflections and bloom bring the blocks and effects to life.
+
+4
+00:00:10,800 --> 00:00:14,000
+Queries + scene updates + rendering.
+Python coordinates the game; each library has a focused responsibility.
