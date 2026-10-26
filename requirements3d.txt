@@ -1,5 +1,5 @@
 numpy==2.2.6
-pillow==12.1.1
+pillow==13.0.0
 usd-core==26.8
 ovstage==0.2.0.377349
 https://pypi.nvidia.com/ovrtx/ovrtx-0.5.0.377615-py3-none-win_amd64.whl#sha256=36a79af1f9613e0a66fe10d59e0ab5b2e0c8552bdbf0f930a9ec5282875fdc4b
